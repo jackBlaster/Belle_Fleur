@@ -12,6 +12,7 @@ using Org.BouncyCastle.Tls.Crypto;
 using System.Reflection;
 using System.Xml.Linq;
 using Newtonsoft.Json;
+using Microsoft.VisualBasic;
 
 
 //----INITIALISATION----//
@@ -40,7 +41,7 @@ while (!(valid_ids.TryGetValue(username, out string true_mdp)&& mdp==true_mdp) )
     Console.Write("Veuillez saisir un mot de passe valide : ");
     mdp = Console.ReadLine();
 }
-Console.Clear();
+Console.Clear();  
 string connectionString = null;
 MySqlConnection connection = null; 
 
@@ -72,8 +73,10 @@ while (!deco)
                        "6-Exporter un fichier JSON\n" +
                        "7-Déconnexion");
     Console.Write("Selectionner votre action(1 à 7) : ");
-    int choice1 = Convert.ToInt32(Console.ReadLine());//MODIFIER (la secu ne marche pas si on entre autre chose qu'un int)
-    while (!(choice1 is int) && (choice1 < 1 || choice1 > 7))//MODIFIER (la secu ne marche pas si on entre autre chose qu'un int)
+    int choice1=0;
+    try { choice1 = Convert.ToInt32(Console.ReadLine()); }
+    catch(Exception ex) { Console.WriteLine("Non valide"); }
+    while (!(choice1 is int) && (choice1 < 1 || choice1 > 7))
     {
         Console.WriteLine("Veuillez saisir un choix valide");
         choice1 = Convert.ToInt32(Console.ReadLine());
@@ -119,8 +122,10 @@ static void Lecture_DB(MySqlConnection connection)
             "2-Liste des commandes\n" +
             "3-Stocks\n" +
             "4-Quitter");
-        int choice1 = Convert.ToInt32(Console.ReadLine());
-        while (choice1 < 1 || choice1 > 7)
+        int choice1 = 0;
+        try { choice1 = Convert.ToInt32(Console.ReadLine()); }
+        catch (Exception ex) { Console.WriteLine("Non valide"); }
+        while (!(choice1 is int) && (choice1 < 1 || choice1 > 7))
         {
             Console.WriteLine("Veuillez saisir un choix valide");
             choice1 = Convert.ToInt32(Console.ReadLine());
@@ -245,8 +250,13 @@ static void Lecture_DB(MySqlConnection connection)
 //A FAIRE
 static void Ajout_DB(MySqlConnection connection)
 {
-    int choice1 = Convert.ToInt32(Console.ReadLine());
-    while (choice1 < 1 || choice1 > 7)
+    Console.Clear(); 
+    Console.WriteLine("Que voulez-vous faire ?" +
+        "\n1-Ajouter un client\n2-Ajouter une commande\n3-Ajouter un bouquet au catalogue\n4-Quitter\nVotre choix : ");
+    int choice1 = 0;
+    try { choice1 = Convert.ToInt32(Console.ReadLine()); }
+    catch (Exception ex) { Console.WriteLine("Non valide"); }
+    while (!(choice1 is int) && (choice1 < 1 || choice1 > 7))
     {
         Console.WriteLine("Veuillez saisir un choix valide");
         choice1 = Convert.ToInt32(Console.ReadLine());
@@ -255,10 +265,11 @@ static void Ajout_DB(MySqlConnection connection)
     {
         case 1:
             //Ajout clients
-
+            Ajout_clients(connection);
             break;
         case 2:
             //Ajout commandes
+            Ajout_cmd(connection);
             break;
         case 3:
             //Ajout bouquet type
@@ -270,11 +281,62 @@ static void Ajout_DB(MySqlConnection connection)
     }
 }
 
-//En cours
+static void Ajout_clients(MySqlConnection connection)
+{
+    Console.Clear();
+    Console.WriteLine("Veuillez renseigner les éléments du client :");
+    Console.WriteLine("email : "); string email = Console.ReadLine();
+    Console.WriteLine("nom : "); string nom = Console.ReadLine();
+    Console.WriteLine("prenom : "); string prenom = Console.ReadLine();
+    Console.WriteLine("tel : "); string tel = Console.ReadLine();
+    Console.WriteLine("adresse : "); string adresse = Console.ReadLine();
+    Console.WriteLine("mdp : "); string mdp = Console.ReadLine();
+    bellefleur.Client new_client = new bellefleur.Client(email, nom, prenom, tel, adresse, mdp);
+
+    MySqlCommand command_client = connection.CreateCommand();
+    command_client.CommandText = "INSERT INTO Fleurs.client (email, mdp, nom, prenom, telephone, adresse_facturation, carte_credit, fidelite)" +
+                                 " VALUES ('"+new_client.Email+"','"+new_client.Mdp+"','"+ new_client.Nom+"','" + new_client.Prenom + "','" + new_client.Telephone + "','" + new_client.Adresse +
+                                 "','" + new_client.Carte_credit + "','" + new_client.Fidelite+"');";
+    command_client.ExecuteNonQuery();
+    Console.WriteLine("Le client a été enregistré\nCliquez pour continuer...");
+    Console.ReadKey();
+
+}
+//EN COURS Faire en sorte que les stocks changent
+static void Ajout_cmd(MySqlConnection connection)
+{
+    Console.Clear();
+    Console.WriteLine("Veuillez renseigner les éléments de la commande :");
+    Console.WriteLine("Adresse de livraison : "); string adresse_livraison = Console.ReadLine();
+    Console.WriteLine("Date de la commande affectée à la date actuelle : "); DateTime date_commande = DateTime.Now;
+    Console.WriteLine("Date de livraison (format : AAAA-MM-JJ) : "); DateTime date_livraison = DateTime.Parse(Console.ReadLine());
+    Console.WriteLine("Message : "); string message = Console.ReadLine();
+    Console.WriteLine("Prix : "); float prix = float.Parse(Console.ReadLine());
+    Console.WriteLine("Statut : "); string statut = Console.ReadLine();
+    Console.WriteLine("Email : "); string email = Console.ReadLine();
+    Console.WriteLine("Mot de passe : "); string mdp = Console.ReadLine();
+    Console.WriteLine("Nom du bouquet : "); string nom_bouquet = Console.ReadLine();
+
+    MySqlCommand command_commande = connection.CreateCommand();
+    command_commande.CommandText = "INSERT INTO Fleurs.Commande (adresse_livraison, date_commande, date_livraison, message, prix, statut, email, mdp, nom_bouquet)" +
+    " VALUES ('" + adresse_livraison + "','" + date_commande.ToString("yyyy-MM-dd HH:mm:ss") + "','" + date_livraison.ToString("yyyy-MM-dd") + "','" + message +
+    "'," + prix + ",'" + statut + "','" + email + "','" + mdp + "','" + nom_bouquet + "');";
+    command_commande.ExecuteNonQuery();
+    Console.WriteLine("La commande a été enregistrée\nCliquez pour continuer...");
+    Console.ReadKey();
+
+}
+
+//En cours - faire clients bouquets et stocks
 static void Modifier_DB(MySqlConnection connection)
 {
-    int choice1 = Convert.ToInt32(Console.ReadLine());
-    while (choice1 < 1 || choice1 > 7)
+    Console.Clear();
+    Console.WriteLine("Que voulez-vous modifier ?" +
+        "\n1-Client\n2-Commande\n3-Bouquet du catalogue\n4-Quitter");
+    int choice1 = 0;
+    try { choice1 = Convert.ToInt32(Console.ReadLine()); }
+    catch (Exception ex) { Console.WriteLine("Non valide"); }
+    while (!(choice1 is int) && (choice1 < 1 || choice1 > 7))
     {
         Console.WriteLine("Veuillez saisir un choix valide");
         choice1 = Convert.ToInt32(Console.ReadLine());
@@ -435,7 +497,7 @@ static void Export_JSON(MySqlConnection connection)
     Console.ReadKey();
 }
 
-
+//EN COURS - ajouter sécurité pour les readlines
 static void Modif_cmd(MySqlConnection connection)
 {
     Console.Clear();
@@ -446,24 +508,43 @@ static void Modif_cmd(MySqlConnection connection)
 
     MySqlDataReader reader_cmd;
     reader_cmd = command_cmd.ExecuteReader();
-
+    List<bellefleur.Commande> cmd_list = new List<bellefleur.Commande>();
     while (reader_cmd.Read())
     {
-        string currentRowAsString = "";
+        string[] currentRowAsString = new string[10];
+        string string_cmd = "";
         for (int i = 0; i < reader_cmd.FieldCount; i++)
         {
             if (reader_cmd.GetValue(i).ToString() != "")
             {
                 string valueAsString = reader_cmd.GetValue(i).ToString();
-                currentRowAsString += valueAsString + ", ";
+                currentRowAsString[i] = valueAsString;
+                string_cmd += valueAsString + " ,";
             }
         }
-        Console.WriteLine(currentRowAsString+"\n");
+        Console.WriteLine(string_cmd+"\n");
+        Commande cmd = new Commande(Convert.ToInt32(currentRowAsString[0]), currentRowAsString[1], Convert.ToDateTime(currentRowAsString[2]), Convert.ToDateTime(currentRowAsString[3]),
+                                                    currentRowAsString[4], Single.Parse(currentRowAsString[5]), currentRowAsString[6], currentRowAsString[7], currentRowAsString[8],
+                                                    currentRowAsString[9]);
+        cmd_list.Add(cmd);
     }
     reader_cmd.Close();
     Console.Write("Votre choix : ");
     int choice = Convert.ToInt32(Console.ReadLine());
     Console.Clear();
-    Console.WriteLine("Le statut de la commande " + choice + " est ");
-    
+    Console.Write("Le statut de la commande " + choice + " est : ");
+    foreach(Commande com in cmd_list)
+    {
+        if(com.Id_commande== choice)
+        {
+            Console.WriteLine(com.Statut);
+        }
+    }
+    Console.Write("\nQuel statut voulez-vous mettre ?\nVINV - Verifier inventaire\nCC - Commande complète\nCAL - Commande à livrer\nCL - Commande livrée\nNouveau statut : ");
+    cmd_list[choice].Statut = Console.ReadLine();
+
+    command_cmd.CommandText = "UPDATE Fleurs.Commande SET statut ='"+cmd_list[choice].Statut+"' WHERE id_commande ="+choice;
+    command_cmd.ExecuteNonQuery();
+    Console.WriteLine("Modification effectuée\nVeuillez cliquer pour continuer...");
+    Console.ReadKey();
 }
