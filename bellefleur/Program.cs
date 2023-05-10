@@ -57,9 +57,7 @@ catch(Exception ex)
 }
 
 
-
 //PREMIER MENU POUR Root/root
-//Faire affichage et test sur la valeur de choice
 bool deco = false;
 while (!deco)
 {
@@ -110,7 +108,7 @@ while (!deco)
 }
 connection.Close();
 
-//EN COURS (RESTE : modifier la presentation)
+//FINI
 static void Lecture_DB(MySqlConnection connection)
 {
     bool leave = false;
@@ -142,18 +140,21 @@ static void Lecture_DB(MySqlConnection connection)
                 MySqlDataReader reader_client;
                 reader_client = command_client.ExecuteReader();
 
+                    
                 while (reader_client.Read())
                 {
-                    string currentRowAsString = "";
+                    string[] currentRowAsString = new string[8];
                     for (int i = 0; i < reader_client.FieldCount; i++)
                     {
+
                         if (reader_client.GetValue(i).ToString() != "")
                         {
                             string valueAsString = reader_client.GetValue(i).ToString();
-                            currentRowAsString += valueAsString + ", ";
+                            currentRowAsString[i] = valueAsString;
                         }
                     }
-                    Console.WriteLine(currentRowAsString);
+                    bellefleur.Client c = new bellefleur.Client(currentRowAsString[0], currentRowAsString[2], currentRowAsString[3], currentRowAsString[4], currentRowAsString[5], currentRowAsString[7]);
+                    Console.WriteLine(c.ToString());
                 }
                 reader_client.Close();
                 Console.WriteLine("\nCliquez sur une touche pour continuer...");
@@ -171,16 +172,19 @@ static void Lecture_DB(MySqlConnection connection)
 
                 while (reader_cmd.Read())
                 {
-                    string currentRowAsString = "";
+                    string[] currentRowAsString = new string[10];
                     for (int i = 0; i < reader_cmd.FieldCount; i++)
                     {
                         if (reader_cmd.GetValue(i).ToString() != "")
                         {
                             string valueAsString = reader_cmd.GetValue(i).ToString();
-                            currentRowAsString += valueAsString + ", ";
+                            currentRowAsString[i] = valueAsString;
                         }
                     }
-                    Console.WriteLine(currentRowAsString);
+                    Commande cmd = new Commande(Convert.ToInt32(currentRowAsString[0]), currentRowAsString[1], Convert.ToDateTime(currentRowAsString[2]), Convert.ToDateTime(currentRowAsString[3]),
+                                                                currentRowAsString[4], Single.Parse(currentRowAsString[5]), currentRowAsString[6], currentRowAsString[7], currentRowAsString[8],
+                                                                currentRowAsString[9]);
+                    Console.WriteLine(cmd.ToString());
                 }
                 reader_cmd.Close();
                 Console.WriteLine("\nCliquez sur une touche pour continuer...");
@@ -393,6 +397,58 @@ static void Show_Stats(MySqlConnection connection)
     }
 }
 
+static void stat_vente(MySqlConnection connection)
+{
+    bool leave = false;
+    while (!leave)
+    {
+        int choice1 = 0;
+        try { choice1 = Convert.ToInt32(Console.ReadLine()); }
+        catch (Exception ex) { Console.WriteLine("Non valide"); }
+        while (!(choice1 is int) && (choice1 < 1 || choice1 > 3))
+        {
+            Console.WriteLine("Veuillez saisir un choix valide");
+            choice1 = Convert.ToInt32(Console.ReadLine());
+        }
+        switch (choice1)
+        {
+            case 1:
+                //Ventes par mois
+                break;
+            case 2:
+                //Ventes par années
+                break;
+            case 3:
+                //Quitter
+                break;
+            default: break;
+        }
+    }
+}
+
+static void stat_ventes_mois(MySqlConnection connection)
+{
+    MySqlCommand command_client = connection.CreateCommand();
+    command_client.CommandText = "select MONTH(date_commande),count(*) from commande group by MONTH(date_commande);";
+
+    MySqlDataReader reader_client;
+    reader_client = command_client.ExecuteReader();
+
+    while (reader_client.Read())
+    {
+        string currentRowAsString = "";
+        for (int i = 0; i < reader_client.FieldCount; i++)
+        {
+            if (reader_client.GetValue(i).ToString() != "")
+            {
+                string valueAsString = reader_client.GetValue(i).ToString();
+                currentRowAsString += valueAsString + ", ";
+            }
+        }
+        Console.WriteLine(currentRowAsString);
+    }
+    reader_client.Close();
+}
 //FINI
 static void Export_XML(MySqlConnection connection)
 {

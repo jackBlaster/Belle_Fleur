@@ -43,5 +43,18 @@ namespace bellefleur
             this.mdp = mdp;
             this.nom_bouquet = nom_bouquet;
         }
+        public string ToString()
+        {
+            string cmd = "=====================================================" +
+                            "\nNO COMMANDE : " + this.id_commande
+                            + "\nEMAIL CLIENT :" + this.email
+                            + "\nADRESSE LIVRAISON :" + this.adresse_livraison +
+                            "\nDATE COMMANDE : " + this.date_commande +
+                            "\nDATE LIVRAISON : " + this.date_livraison +
+                            "\nMONTANT FACTURE : " + this.prix +
+                            "\nSTATUT : " + this.statut +
+                            "\n=====================================================";
+            return cmd;
+        }
     }
 }

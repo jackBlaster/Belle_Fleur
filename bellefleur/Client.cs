@@ -40,5 +40,18 @@ namespace bellefleur
         }
         public Client(): this("N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C", "N/C")
         { }
+
+        public string ToString()
+        {
+            string client = "=====================================================" +
+                            "\nEMAIL : " + this.email
+                            +"\nNOM :" + this.nom +
+                            "\nPRENOM : " + this.prenom +
+                            "\nTELEPHONE : " + this.telephone +
+                            "\nADRESSE : " + this.adresse +
+                            "\nFIDELITE : " + this.fidelite +
+                            "\n=====================================================" ;
+            return client;
+        }
     }
 }
