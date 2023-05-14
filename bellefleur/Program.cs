@@ -16,7 +16,7 @@ using Microsoft.VisualBasic;
 
 
 //----INITIALISATION----//
-Console.WriteLine("----Bienvenue dans la base de donnée Belle Fleur----\n Veuillez appuyer sur une touche...");
+Console.WriteLine("||----| Bienvenue dans la base de donnée Belle Fleur |----||\n           Veuillez appuyer sur une touche...");
 Console.ReadKey();
 Console.Clear();
 
@@ -109,6 +109,8 @@ while (!deco)
 connection.Close();
 
 //FINI
+//Fonction permettant de lire les éléments de la database
+//switch-case pour choisir quelle table lire
 static void Lecture_DB(MySqlConnection connection)
 {
     bool leave = false;
@@ -252,6 +254,7 @@ static void Lecture_DB(MySqlConnection connection)
 }
 
 //A FAIRE
+//Fonction permettant d'ajouter des éléments à la database via des sous-fonctions plus spécifiques
 static void Ajout_DB(MySqlConnection connection)
 {
     Console.Clear(); 
@@ -285,6 +288,7 @@ static void Ajout_DB(MySqlConnection connection)
     }
 }
 
+//Sous-fonction liée à Ajout_DB() : permet d'ajouter un client
 static void Ajout_clients(MySqlConnection connection)
 {
     Console.Clear();
@@ -306,7 +310,9 @@ static void Ajout_clients(MySqlConnection connection)
     Console.ReadKey();
 
 }
+
 //EN COURS Faire en sorte que les stocks changent
+//Sous-fonction liée à Ajout_DB() : permet d'ajouter une commande
 static void Ajout_cmd(MySqlConnection connection)
 {
     Console.Clear();
@@ -332,6 +338,7 @@ static void Ajout_cmd(MySqlConnection connection)
 }
 
 //En cours - faire clients bouquets et stocks
+//Fonction permettant de modifier des éléments de la database via des sous-fonctions plus spécifiques
 static void Modifier_DB(MySqlConnection connection)
 {
     Console.Clear();
@@ -368,37 +375,74 @@ static void Modifier_DB(MySqlConnection connection)
 }
 
 //A FAIRE
+//Fonction permettant de choisir des statistiques de vente via des sous-fonctions plus spécifiques
 static void Show_Stats(MySqlConnection connection)
 {
-    int choice1 = Convert.ToInt32(Console.ReadLine());
-    while (choice1 < 1 || choice1 > 7)
+    bool leave = false;
+    while (!leave)
     {
-        Console.WriteLine("Veuillez saisir un choix valide");
-        choice1 = Convert.ToInt32(Console.ReadLine());
-    }
-    switch (choice1)
-    {
-        case 1:
-            //Ventes
-            break;
-        case 2:
-            //Produits les plus utilisés
-            break;
-        case 3:
-            //Gains = factures - prix composants
-            break;
-        case 4:
-            //Clients (plus de comandes etc...)
-            break;
-        case 5:
-            //Quitter
-            break;
-        default: break;
+        Console.Clear();
+        Console.WriteLine("Quelle type de statistique voulez-vous voir ?\n1-Statistiques de ventes\n2-Statistiques sur les produits\n3-Statistiques sur les bénéfices" +
+            "\n4-Statistiques sur les clients\n5-Quitter");
+        int choice1 = Convert.ToInt32(Console.ReadLine());
+        while (choice1 < 1 || choice1 > 7)
+        {
+            Console.WriteLine("Veuillez saisir un choix valide");
+            choice1 = Convert.ToInt32(Console.ReadLine());
+        }
+        switch (choice1)
+        {
+            case 1:
+                //Ventes
+                stat_vente(connection);
+                break;
+            case 2:
+                //Produits les plus utilisés
+                stats_produits(connection);
+                break;
+            case 3:
+                //Gains = factures - prix composants
+                MySqlCommand command_client = connection.CreateCommand();
+                command_client.CommandText = "select sum(prix) from commande;";
+
+                MySqlDataReader reader_client;
+                reader_client = command_client.ExecuteReader();
+
+                while (reader_client.Read())
+                {
+                    string currentRowAsString = "Le total des commandes s'éleve à ";
+                    for (int i = 0; i < reader_client.FieldCount; i++)
+                    {
+                        if (reader_client.GetValue(i).ToString() != "")
+                        {
+                           
+                             string valueAsString = reader_client.GetValue(i).ToString();
+                             currentRowAsString += valueAsString + "";
+                            
+                        }
+                    }
+                    currentRowAsString += " €.";
+                    Console.WriteLine(currentRowAsString);
+                }
+                reader_client.Close();
+                break;
+            case 4:
+                //Clients (plus de comandes etc...)
+                break;
+            case 5:
+                //Quitter
+                leave = true;
+                break;
+            default: break;
+        }
     }
 }
 
+#region <Stats ventes - Sous-méthodes>
 static void stat_vente(MySqlConnection connection)
 {
+    Console.Clear();
+    Console.WriteLine("Quelle type de statistique voulez-vous voir ?\n1-Ventes par mois\n2-Ventes par année\n3-Nombre de ventes\n4-Quitter");
     bool leave = false;
     while (!leave)
     {
@@ -413,15 +457,20 @@ static void stat_vente(MySqlConnection connection)
         switch (choice1)
         {
             case 1:
-                //Ventes par mois
+                stat_ventes_mois(connection);
                 break;
             case 2:
-                //Ventes par années
+                stat_ventes_annee(connection);
                 break;
             case 3:
+                stat_nb_ventes(connection);
+                break;
+            case 4:
                 //Quitter
+                leave = true;
                 break;
             default: break;
+                
         }
     }
 }
@@ -441,15 +490,181 @@ static void stat_ventes_mois(MySqlConnection connection)
         {
             if (reader_client.GetValue(i).ToString() != "")
             {
-                string valueAsString = reader_client.GetValue(i).ToString();
-                currentRowAsString += valueAsString + ", ";
+                if (i != reader_client.FieldCount - 1)
+                {
+                    string valueAsString = reader_client.GetValue(i).ToString();
+                    currentRowAsString += valueAsString + " => ";
+                }
+                else
+                {
+                    string valueAsString = reader_client.GetValue(i).ToString();
+                    currentRowAsString += valueAsString + "";
+                }
             }
         }
         Console.WriteLine(currentRowAsString);
     }
     reader_client.Close();
 }
+
+static void stat_ventes_annee(MySqlConnection connection)
+{
+    MySqlCommand command_client = connection.CreateCommand();
+    command_client.CommandText = "select YEAR(date_commande),count(*) from commande group by YEAR(date_commande);";
+
+    MySqlDataReader reader_client;
+    reader_client = command_client.ExecuteReader();
+
+    while (reader_client.Read())
+    {
+        string currentRowAsString = "";
+        for (int i = 0; i < reader_client.FieldCount; i++)
+        {
+            if (reader_client.GetValue(i).ToString() != "")
+            {
+                if (i != reader_client.FieldCount - 1)
+                {
+                    string valueAsString = reader_client.GetValue(i).ToString();
+                    currentRowAsString += valueAsString + " => ";
+                }
+                else
+                {
+                    string valueAsString = reader_client.GetValue(i).ToString();
+                    currentRowAsString += valueAsString + "";
+                }
+            }
+        }
+        Console.WriteLine(currentRowAsString);
+    }
+    reader_client.Close();
+}
+
+static void stat_nb_ventes(MySqlConnection connection)
+{
+    Console.Clear();
+    MySqlCommand command_client = connection.CreateCommand();
+    command_client.CommandText = "select count(*) from commande ;";
+
+    MySqlDataReader reader_client;
+    reader_client = command_client.ExecuteReader();
+
+    while (reader_client.Read())
+    {
+        string currentRowAsString = "Il y a eu un total de ";
+        for (int i = 0; i < reader_client.FieldCount; i++)
+        {
+            if (reader_client.GetValue(i).ToString() != "")
+            {
+                string valueAsString = reader_client.GetValue(i).ToString();
+                currentRowAsString += valueAsString;
+
+            }
+            currentRowAsString += " commandes.";
+        }
+        Console.WriteLine(currentRowAsString);
+    }
+    reader_client.Close();
+}
+#endregion
+
+#region<Stats produits - Sous-méthodes>
+static void stats_produits(MySqlConnection connection)
+{
+    Console.Clear();
+    bool leave = false;
+    while (!leave)
+    {
+        Console.Clear();
+        Console.WriteLine("Quelle type de statistique voulez-vous voir ?\n1-Bouquet le plus vendu\n2-Fleur la plus vendue\n3-Accessoire le plus vendu" +
+            "\n4-Quitter");
+        int choice1 = Convert.ToInt32(Console.ReadLine());
+        while (choice1 < 1 || choice1 > 7)
+        {
+            Console.WriteLine("Veuillez saisir un choix valide");
+            choice1 = Convert.ToInt32(Console.ReadLine());
+        }
+        switch (choice1)
+        {
+            case 1:
+
+                break;
+            case 2:
+
+                break;
+            case 3:
+                //Gains = factures - prix composants
+                break;
+            case 4:
+                //Quitter
+                leave = true;
+                break;
+            default: break;
+        }
+    }
+}
+
+static void stat_bouquet(MySqlConnection connection)
+{
+    Console.Clear();
+    MySqlCommand command_client = connection.CreateCommand();
+    command_client.CommandText = "SELECT nom_bouquet AS nb_ventes FROM commande GROUP BY nom_bouquet ORDER BY nb_ventes DESC LIMIT 1;";
+
+    MySqlDataReader reader_client;
+    reader_client = command_client.ExecuteReader();
+
+    while (reader_client.Read())
+    {
+        string currentRowAsString = "Le bouquet le plus vendu est : ";
+        for (int i = 0; i < reader_client.FieldCount; i++)
+        {
+            if (reader_client.GetValue(i).ToString() != "")
+            {
+                string valueAsString = reader_client.GetValue(i).ToString();
+                currentRowAsString += valueAsString;
+
+            }
+            currentRowAsString += ".";
+        }
+        Console.WriteLine(currentRowAsString);
+    }
+    reader_client.Close();
+}
+#endregion
+
+#region<Stats clients>
+static void best_client(MySqlConnection connection)
+{
+    Console.Clear();
+    MySqlCommand command_client = connection.CreateCommand();
+    command_client.CommandText = "SELECT c.nom, c.prenom ,count(*) as cnt FROM client c JOIN commande cm ON c.email = cm.email GROUP BY c.nom, c.prenom order by cnt desc limit 1; ";
+
+    MySqlDataReader reader_client;
+    reader_client = command_client.ExecuteReader();
+
+    while (reader_client.Read())
+    {
+        string currentRowAsString = "Le meilleur client est : ";
+        for (int i = 0; i < reader_client.FieldCount; i++)
+        {
+            if (reader_client.GetValue(i).ToString() != "")
+            {
+                string valueAsString = reader_client.GetValue(i).ToString();
+                currentRowAsString += valueAsString;
+
+            }
+            
+            currentRowAsString += " avec ";
+        }
+        currentRowAsString += " commandes";
+        Console.WriteLine(currentRowAsString);
+    }
+    reader_client.Close();
+}
+#endregion
+
+
 //FINI
+//Fonction permettant d'exporter les clients ayant commander durant le dernier mois en fichier XML
 static void Export_XML(MySqlConnection connection)
 {
     Console.Clear();
@@ -510,6 +725,7 @@ static void Export_XML(MySqlConnection connection)
 }
 
 //FINI(voir si possible de donner le nom clients a la list dans le fichier json)
+//Fonction permettant d'exporter les clients ayant commander il y a plus de 6 mois en fichier JSON
 static void Export_JSON(MySqlConnection connection)
 {
     Console.Clear();
@@ -554,6 +770,7 @@ static void Export_JSON(MySqlConnection connection)
 }
 
 //EN COURS - ajouter sécurité pour les readlines
+//Fonction permettant de modifier l'état des commandes
 static void Modif_cmd(MySqlConnection connection)
 {
     Console.Clear();
