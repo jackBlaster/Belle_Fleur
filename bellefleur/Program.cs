@@ -56,54 +56,101 @@ catch(Exception ex)
     Console.WriteLine(ex.Message);
 }
 
-
-//PREMIER MENU POUR Root/root
-bool deco = false;
-while (!deco)
+if (username == "root")
 {
-    Console.Clear();
-    Console.WriteLine("Que voulez-vous faire ?\n" +
-                       "1-Lire la base de donnée\n" +
-                       "2-Ajouter un élément\n" +
-                       "3-Modifier un élément\n" +
-                       "4-Voir les statistiques\n" +
-                       "5-Exporter un fichier XML\n" +
-                       "6-Exporter un fichier JSON\n" +
-                       "7-Déconnexion");
-    Console.Write("Selectionner votre action(1 à 7) : ");
-    int choice1=0;
-    try { choice1 = Convert.ToInt32(Console.ReadLine()); }
-    catch(Exception ex) { Console.WriteLine("Non valide"); }
-    while (!(choice1 is int) && (choice1 < 1 || choice1 > 7))
+    //PREMIER MENU POUR Root/root
+    bool deco = false;
+    while (!deco)
     {
-        Console.WriteLine("Veuillez saisir un choix valide");
-        choice1 = Convert.ToInt32(Console.ReadLine());
+        Console.Clear();
+        Console.WriteLine("Que voulez-vous faire ?\n" +
+                           "1-Lire la base de donnée\n" +
+                           "2-Ajouter un élément\n" +
+                           "3-Modifier un élément\n" +
+                           "4-Voir les statistiques\n" +
+                           "5-Exporter un fichier XML\n" +
+                           "6-Exporter un fichier JSON\n" +
+                           "7-Déconnexion");
+        Console.Write("Selectionner votre action(1 à 7) : ");
+        int choice1 = 0;
+        try { choice1 = Convert.ToInt32(Console.ReadLine()); }
+        catch (Exception ex) { Console.WriteLine("Non valide"); }
+        while (!(choice1 is int) && (choice1 < 1 || choice1 > 7))
+        {
+            Console.WriteLine("Veuillez saisir un choix valide");
+            choice1 = Convert.ToInt32(Console.ReadLine());
+        }
+        switch (choice1)
+        {
+            case 1:
+                Console.Clear();
+                Lecture_DB(connection);
+                break;
+            case 2:
+                Ajout_DB(connection);
+                break;
+            case 3:
+                Modifier_DB(connection);
+                break;
+            case 4:
+                Show_Stats(connection);
+                break;
+            case 5:
+                Export_XML(connection);
+                break;
+            case 6:
+                Export_JSON(connection);
+                break;
+            case 7://Deconnexion
+                deco = true;
+                break;
+            default: break;
+        }
     }
-    switch (choice1)
+}
+
+else
+{
+    //PREMIER MENU POUR Root/root
+    bool deco = false;
+    while (!deco)
     {
-        case 1:
-            Console.Clear();
-            Lecture_DB(connection);
-            break;
-        case 2:
-            Ajout_DB(connection);
-            break;
-        case 3:
-            Modifier_DB(connection);
-            break;
-        case 4:
-            Show_Stats(connection);
-            break;
-        case 5:
-            Export_XML(connection);
-            break;
-        case 6:
-            Export_JSON(connection);
-            break;
-        case 7://Deconnexion
-            deco = true;
-            break;
-        default: break;
+        Console.Clear();
+        Console.WriteLine("Que voulez-vous faire ?\n" +
+                           "1-Lire la base de donnée\n" +
+                           "2-Voir les statistiques\n" +
+                           "3-Exporter un fichier XML\n" +
+                           "4-Exporter un fichier JSON\n" +
+                           "5-Déconnexion");
+        Console.Write("Selectionner votre action(1 à 5) : ");
+        int choice1 = 0;
+        try { choice1 = Convert.ToInt32(Console.ReadLine()); }
+        catch (Exception ex) { Console.WriteLine("Non valide"); }
+        while (!(choice1 is int) && (choice1 < 1 || choice1 > 5))
+        {
+            Console.WriteLine("Veuillez saisir un choix valide");
+            choice1 = Convert.ToInt32(Console.ReadLine());
+        }
+        switch (choice1)
+        {
+            case 1:
+                Console.Clear();
+                Lecture_DB(connection);
+                break;
+            case 2:
+                Show_Stats(connection);
+                break;
+            case 3:
+                Export_XML(connection);
+                break;
+            case 4:
+                Export_JSON(connection);
+                break;
+            case 5://Deconnexion
+                deco = true;
+                break;
+            default: break;
+        }
     }
 }
 connection.Close();
@@ -428,6 +475,7 @@ static void Show_Stats(MySqlConnection connection)
                 break;
             case 4:
                 //Clients (plus de comandes etc...)
+                best_client(connection);
                 break;
             case 5:
                 //Quitter
@@ -575,7 +623,7 @@ static void stats_produits(MySqlConnection connection)
     while (!leave)
     {
         Console.Clear();
-        Console.WriteLine("Quelle type de statistique voulez-vous voir ?\n1-Bouquet le plus vendu\n2-Fleur la plus vendue\n3-Accessoire le plus vendu" +
+        Console.WriteLine("Quelle type de statistique voulez-vous voir ?\n1-Bouquet le plus vendu\n2-Fleur la plus vendue (non dispo)\n3-Accessoire le plus vendu (non dispo)" +
             "\n4-Quitter");
         int choice1 = Convert.ToInt32(Console.ReadLine());
         while (choice1 < 1 || choice1 > 7)
@@ -586,7 +634,7 @@ static void stats_produits(MySqlConnection connection)
         switch (choice1)
         {
             case 1:
-
+                stat_bouquet(connection);
                 break;
             case 2:
 
@@ -785,20 +833,19 @@ static void Modif_cmd(MySqlConnection connection)
     while (reader_cmd.Read())
     {
         string[] currentRowAsString = new string[10];
-        string string_cmd = "";
         for (int i = 0; i < reader_cmd.FieldCount; i++)
         {
             if (reader_cmd.GetValue(i).ToString() != "")
             {
                 string valueAsString = reader_cmd.GetValue(i).ToString();
                 currentRowAsString[i] = valueAsString;
-                string_cmd += valueAsString + " ,";
             }
         }
-        Console.WriteLine(string_cmd+"\n");
+        
         Commande cmd = new Commande(Convert.ToInt32(currentRowAsString[0]), currentRowAsString[1], Convert.ToDateTime(currentRowAsString[2]), Convert.ToDateTime(currentRowAsString[3]),
                                                     currentRowAsString[4], Single.Parse(currentRowAsString[5]), currentRowAsString[6], currentRowAsString[7], currentRowAsString[8],
-                                                    currentRowAsString[9]);
+                                                 currentRowAsString[9]);
+        Console.WriteLine(cmd.ToString());   
         cmd_list.Add(cmd);
     }
     reader_cmd.Close();
@@ -820,4 +867,24 @@ static void Modif_cmd(MySqlConnection connection)
     command_cmd.ExecuteNonQuery();
     Console.WriteLine("Modification effectuée\nVeuillez cliquer pour continuer...");
     Console.ReadKey();
+}
+
+//Fonction qui permet d'obtenir les privilèges d'un utilisateur
+//Non utilisée => pour amélioration
+static List<string> users_privileges(MySqlConnection connection,string username)
+{
+    string sql = $"SHOW GRANTS FOR '{username}'@'localhost';";
+    List<string> privileges = new List<string>();
+    using (MySqlCommand command = new MySqlCommand(sql, connection))
+    {
+        using (MySqlDataReader reader = command.ExecuteReader())
+        {
+            while (reader.Read())
+            {
+                string grant = reader.GetString(0);
+                privileges.Add(grant);
+            }
+        }
+    }
+    return privileges;
 }
